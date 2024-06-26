@@ -1,0 +1,67 @@
+Vulnerability Scanning Tool
+
+A vulnerability scanner is an automated vulnerability testing tool that monitors for misconfigurations or coding flaws that pose cybersecurity threats. Vulnerability scanners either rely on a database of known vulnerabilities or probe for common flaw types to discover unknown vulnerabilities.
+
+Creation of a vulnerability scanning tool:
+
+
+
+sudo apt-get install nmap nikto python3 python3-pip
+
+mkdir vuln_scanner
+
+cd vuln_scanner
+
+sudo apt-get install python3.11-venv
+
+nano vuln_scanner.py
+
+#!/usr/bin/env python3
+import os
+import subprocess
+import re
+
+def strip_url_scheme(url):
+    return re.sub(r'^https?://', '', url)
+
+def scan_network(target):
+    target_for_nmap = strip_url_scheme(target)
+    print(f"Scanning target: {target}")
+
+    # Run Nmap to detect open ports and services
+    print("Running Nmap scan...")
+    try:
+        nmap_scan = subprocess.check_output(["nmap", "-sV", target_for_nmap]).decode("utf-8")
+        print(nmap_scan)
+
+        # Save Nmap results to a file
+        with open("nmap_scan.txt", "w") as f:
+            f.write(nmap_scan)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running Nmap scan: {e}")
+        return
+
+    # Run Nikto to scan for vulnerabilities on web servers
+    print("Running Nikto scan...")
+    try:
+        nikto_scan = subprocess.check_output(["nikto", "-h", target]).decode("utf-8")
+        print(nikto_scan)
+
+        # Save Nikto results to a file
+        with open("nikto_scan.txt", "w") as f:
+            f.write(nikto_scan)
+    except subprocess.CalledProcessError as e:
+        print(f"Error running Nikto scan: {e}")
+    except KeyboardInterrupt:
+        print("\nScan interrupted by user.")
+    finally:
+        print("Scanning complete. Results saved to nmap_scan.txt and nikto_scan.txt.")
+
+if __name__ == "__main__":
+    target = input("Enter the target IP or domain: ")
+    scan_network(target)
+
+
+chmod +x vuln_scanner.py
+
+python3 vuln_scanner.py
